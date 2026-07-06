@@ -1,0 +1,32 @@
+name: loop
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 21 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 점검하고 고치기
+        run: node loop.js
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: 수정 사항 기록하기
+        run: |
+          git config user.name "loop-bot"
+          git config user.email "loop-bot@users.noreply.github.com"
+          git add server.js
+          git diff --cached --quiet || git commit -m "loop: 실패한 테스트를 고쳤습니다"
+          git push
